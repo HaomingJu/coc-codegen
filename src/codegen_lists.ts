@@ -1,17 +1,12 @@
-import { BasicList, ListAction, ListContext, ListItem, Neovim, window } from 'coc.nvim';
+import { ListContext, ListItem, Neovim, window } from 'coc.nvim';
 
-export default class DemoList extends BasicList {
-  public readonly name = 'demo_list';
+export default class CodeGenList {
+  public readonly name = 'codegen_list';
   public readonly description = 'CocList for coc-codegen';
   public readonly defaultAction = 'open';
-  public actions: ListAction[] = [];
 
-  constructor(nvim: Neovim) {
-    super(nvim);
+  constructor() {
 
-    this.addAction('open', (item: ListItem) => {
-      window.showMessage(`${item.label}, ${item.data.name}`);
-    });
   }
 
   public async loadItems(context: ListContext): Promise<ListItem[]> {

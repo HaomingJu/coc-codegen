@@ -1,54 +1,52 @@
-import { commands, CompleteResult, ExtensionContext, listManager, sources, window, workspace } from 'coc.nvim';
-import DemoList from './lists';
+import {CompletionList, commands, CompleteResult, ExtensionContext, languages, listManager, sources, window, workspace } from 'coc.nvim';
+import CodeGenList from './codegen_lists';
+
+async function getCompletionItems(): Promise<CompletionList> {
+  return {
+    isIncomplete: false,        
+    items: [
+      {
+        label: 'xietianpwi 1',
+        data: '[coc-codegen]',
+      },
+      {
+        label: 'xietianpwi 2',
+        data: '[coc-codegen]',
+      },
+    ],
+  };
+}
 
 export async function activate(context: ExtensionContext): Promise<void> {
-  window.showMessage(`coc-codegen works!`);
+  const configuration = workspace.getConfiguration('codegen')
+  const api_base = configuration.get<string>('api_base', "127.0.0.1:8978")
+  const api_key = configuration.get<string>('api_key', "dummy")
+  const engine = configuration.get<string>('engine', "codegen")
+  const shortcut = configuration.get<string>('shortcut', "NLP")
+  const filetypes = configuration.get<string[] | null>('filetypes', ['cpp', 'c', 'python'])
+  const priority = configuration.get<number>('priority', undefined)
+  const { subscriptions, logger } = context
 
-  context.subscriptions.push(
-    commands.registerCommand('coc-codegen.Command', async () => {
-      window.showMessage(`coc-codegen Commands works!`);
-    }),
+  window.showMessage(api_base);
 
-    listManager.registerList(new DemoList(workspace.nvim)),
+  const codeGen = new CodeGenList();
 
-    sources.createSource({
-      name: 'coc-codegen completion source', // unique id
-      doComplete: async () => {
-        const items = await getCompletionItems();
-        return items;
-      },
-    }),
+  subscriptions.push(
 
-    workspace.registerKeymap(
-      ['n'],
-      'codegen-keymap',
-      async () => {
-        window.showMessage(`registerKeymap`);
-      },
-      { sync: false }
-    ),
+    languages.registerCompletionItemProvider("codegen", shortcut, filetypes,  {
+        async provideCompletionItems(): Promise<CompletionList | undefined | null> {
+            // TODO: 如何连接到后端
+            let ret: CompletionList = getCompletionItems();
+            return ret;
+        }}, [], priority),
 
     workspace.registerAutocmd({
       event: 'InsertLeave',
       request: true,
       callback: () => {
-        window.showMessage(`registerAutocmd on InsertLeave`);
+        logger.error('registerAutocmd on InsertLeave');
       },
     })
   );
 }
 
-async function getCompletionItems(): Promise<CompleteResult> {
-  return {
-    items: [
-      {
-        word: 'TestCompletionItem 1',
-        menu: '[coc-codegen]',
-      },
-      {
-        word: 'TestCompletionItem 2',
-        menu: '[coc-codegen]',
-      },
-    ],
-  };
-}
