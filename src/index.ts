@@ -1,17 +1,31 @@
 import {CompletionList, commands, CompleteResult, ExtensionContext, languages, listManager, sources, window, workspace } from 'coc.nvim';
 import CodeGenList from './codegen_lists';
+import axios from 'axios';
 
 async function getCompletionItems(): Promise<CompletionList> {
+    const data = {prompt: 'string', stream: false};
+    const config = {
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        }
+    };
+
+    //var response = await axios.post("http://10.11.1.15:8978/v1/engines/codegen/completions",
+        //data, config)
+
+    //response.data.choices[0].text
+
   return {
     isIncomplete: false,        
     items: [
       {
         label: 'xietianpwi 1',
-        data: '[coc-codegen]',
+        documentation: "测试4"
       },
       {
         label: 'xietianpwi 2',
-        data: '[coc-codegen]',
+        documentation: '测试3',
       },
     ],
   };
@@ -27,7 +41,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const priority = configuration.get<number>('priority', undefined)
   const { subscriptions, logger } = context
 
-  window.showMessage(api_base);
+  //window.showMessage(api_base);
 
   const codeGen = new CodeGenList();
 
@@ -36,7 +50,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     languages.registerCompletionItemProvider("codegen", shortcut, filetypes,  {
         async provideCompletionItems(): Promise<CompletionList | undefined | null> {
             // TODO: 如何连接到后端
-            let ret: CompletionList = getCompletionItems();
+            let ret: CompletionList = await getCompletionItems();
             return ret;
         }}, [], priority),
 
