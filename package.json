@@ -16,7 +16,8 @@
     "clean": "rimraf lib",
     "watch": "node esbuild.js --watch",
     "build": "node esbuild.js",
-    "prepare": "node esbuild.js"
+    "prepare": "node esbuild.js",
+    "format": "eslint --fix 'src/**/*.{js,ts,tsx}'"
   },
   "prettier": {
     "singleQuote": true,
