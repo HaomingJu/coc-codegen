@@ -1,34 +1,57 @@
 import {CompletionList, commands, CompleteResult, ExtensionContext, languages, listManager, sources, window, workspace } from 'coc.nvim';
-import CodeGenList from './codegen_lists';
-import axios from 'axios';
 
-async function getCompletionItems(): Promise<CompletionList> {
-    const data = {prompt: 'string', stream: false};
-    const config = {
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+type Choice = {
+    text: string;
+    index: number;
+    finish_reason: string;
+};
+
+type Usage = {
+  completion_tokens: string; 
+  prompt_tokens: string;
+  total_tokens: string;
+};
+
+
+type CodeCompletionResponse = {
+  id: string;
+  model: string;
+  object: string;
+  created: string;
+  choices: Choice[];
+  usage: Usage;
+};
+
+async function getCompletionItems(url_: string, prompt_: string, stream_: bool = false): Promise<CompletionList> {
+
+    const response = await fetch(url_, {
+      method: 'POST',
+      body: JSON.stringify({
+        prompt: prompt_,
+        stream: stream_
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+        const result = (await response.json()) as CodeCompletionResponse;
+        console.log(result.model);
+        console.log(result.choices[0].text);
+        var return_str = prompt_.concat(result.choices[0].text)
+
+        return {
+            isIncomplete: false,
+            items: [
+                {
+                    label: return_str,
+                    documentation: return_str
+                }
+            ]
         }
-    };
-
-    //var response = await axios.post("http://10.11.1.15:8978/v1/engines/codegen/completions",
-        //data, config)
-
-    //response.data.choices[0].text
-
-  return {
-    isIncomplete: false,        
-    items: [
-      {
-        label: 'xietianpwi 1',
-        documentation: "测试4"
-      },
-      {
-        label: 'xietianpwi 2',
-        documentation: '测试3',
-      },
-    ],
-  };
+    }
 }
 
 export async function activate(context: ExtensionContext): Promise<void> {
@@ -39,18 +62,16 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const shortcut = configuration.get<string>('shortcut', "NLP")
   const filetypes = configuration.get<string[] | null>('filetypes', ['cpp', 'c', 'python'])
   const priority = configuration.get<number>('priority', undefined)
-  const { subscriptions, logger } = context
+  const post_url = "http://10.11.1.15:8978/v1/engines/codegen/completions"
+  const { subscriptions } = context
 
-  //window.showMessage(api_base);
 
-  const codeGen = new CodeGenList();
 
   subscriptions.push(
-
     languages.registerCompletionItemProvider("codegen", shortcut, filetypes,  {
         async provideCompletionItems(): Promise<CompletionList | undefined | null> {
             // TODO: 如何连接到后端
-            let ret: CompletionList = await getCompletionItems();
+            let ret: CompletionList = await getCompletionItems(post_url, "if __name__ == ")
             return ret;
         }}, [], priority),
 
